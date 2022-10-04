@@ -15,7 +15,7 @@ public class Task {
 
     private int c2;
 
-    private CountDownLatch count;
+    private volatile int count;
 
     public Task(int numberOfThreads, int numberOfIterations, int pause) {
         this.numberOfThreads = numberOfThreads;
@@ -24,20 +24,19 @@ public class Task {
     }
 
     public void compare() {
-        count = new CountDownLatch(numberOfThreads);
+        count = numberOfThreads;
         c1 = 0;
         c2 = 0;
         for (int i = 0; i < numberOfThreads; i++) {
             new Thread(this::counting).start();
         }
-        try {
-            count.await();
-        } catch (InterruptedException ignored) {
+        while (count > 0) {
+            Thread.onSpinWait();
         }
     }
 
     public void compareSync() {
-        count = new CountDownLatch(numberOfThreads);
+        count = numberOfThreads;
         c1 = 0;
         c2 = 0;
         for (int i = 0; i < numberOfThreads; i++) {
@@ -47,9 +46,8 @@ public class Task {
 				}
 			}).start();
         }
-        try {
-            count.await();
-        } catch (InterruptedException ignored) {
+        while (count > 0) {
+            Thread.onSpinWait();
         }
     }
 
@@ -63,7 +61,7 @@ public class Task {
             c2++;
             System.out.println((c1 == c2) + " " + c1 + " " + c2);
         }
-        count.countDown();
+        count--;
     }
 
     public static void main(String[] args) {
