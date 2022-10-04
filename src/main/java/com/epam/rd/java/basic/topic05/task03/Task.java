@@ -1,7 +1,7 @@
 package com.epam.rd.java.basic.topic05.task03;
 
 import java.util.concurrent.*;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Task {
 
@@ -15,7 +15,7 @@ public class Task {
 
     private int c2;
 
-    private volatile int count;
+    private AtomicInteger count;
 
     public Task(int numberOfThreads, int numberOfIterations, int pause) {
         this.numberOfThreads = numberOfThreads;
@@ -24,19 +24,19 @@ public class Task {
     }
 
     public void compare() {
-        count = numberOfThreads;
+        count = new AtomicInteger(numberOfThreads);
         c1 = 0;
         c2 = 0;
         for (int i = 0; i < numberOfThreads; i++) {
             new Thread(this::counting).start();
         }
-        while (count > 0) {
+        while (count.intValue() > 0) {
             Thread.onSpinWait();
         }
     }
 
     public void compareSync() {
-        count = numberOfThreads;
+        count = new AtomicInteger(numberOfThreads);
         c1 = 0;
         c2 = 0;
         for (int i = 0; i < numberOfThreads; i++) {
@@ -46,7 +46,7 @@ public class Task {
 				}
 			}).start();
         }
-        while (count > 0) {
+        while (count.intValue() > 0) {
             Thread.onSpinWait();
         }
     }
@@ -61,7 +61,7 @@ public class Task {
             c2++;
             System.out.println((c1 == c2) + " " + c1 + " " + c2);
         }
-        count--;
+        count.decrementAndGet();
     }
 
     public static void main(String[] args) {
